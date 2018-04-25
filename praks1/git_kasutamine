@@ -24,3 +24,14 @@ git remote add rsha https://github.com/timojarve002/rsha.git
 
 b)
 git remote -v
+
+põhikasuitamine:
+
+a) pane fail jälgimisele:
+git add failinimi
+
+b) lisa kirjeldus muudatuste kohta
+git commit -m "lühikirjeldus muudatustest"
+
+c) lisa kaugrepositooriumi
+git push -uf rsha master
