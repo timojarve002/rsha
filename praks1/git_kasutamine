@@ -16,3 +16,11 @@ cd skriptimine
 
 d) tekita lokaalne repositoorium git süsteemi jaoks antus kasutas
 git init
+
+remote seadistamine:
+
+a) git remote add nimi address
+git remote add rsha https://github.com/timojarve002/rsha.git
+
+b)
+git remote -v
