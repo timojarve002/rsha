@@ -1,23 +1,24 @@
 #!/bin/bash
 
-#Lihtne kasutaja loomise skript
+# lihtne kasutaja lisamise skript
 
-
-if [ $(id -u) -eq 0 ]; then
-	#loeb kasutajanime
-	read -p "Sisesta kasutajanimi: " nimi
-	#kontrollib kas kasutaja on juba olemas
-	if [ $? -eq 0 ]; then
-		echo "$nimi kasutaja on juba olemas!"
-		exit 1 
-	#lisame kasutaja vastavalt sisendile
-	else
-		useradd -m $nimi -s /bin/bash
-		[ $? -eq 0 ] && echo "Kasutaja on lisatud!" || echo "Probleem kasutaja lisamisega"
-
-	fi
-	#veateade kui pole piisavalt õigusi
+if [ $# -ne 1 ]; then
+	echo "Kasutusjuhend: Käsk kasutajanimi"
 else
-	echo "Kas oled root kasutaja?"
-	exit 1
+	# defineerime vajalik muutuja kasutajanimi salvestamiseks
+	# kasutajanimi on esimene parameeter
+	kasutajanimi=$1
+	# kasutame kasutaja lisamise käsk vajalikute võtmetega
+	useradd $kasutajanimi -m -s /bin/bash
+  	# kontrollime
+  	# $? - viimase! käsu väljund staatus, 0 kui on korras, muu kui on probleem
+	if [ $? -eq 0 ]; then
+    		echo "Kasutaja nimega $kasutajanimi on lisatud süsteemi"
+		cat /etc/passwd | grep $kasutajanimi
+		ls -la /home/$kasutajanimi
+ 	 else
+		echo "probleem kasutaja $kasutajanimi lisamisega"
+		echo "probleemi kood on $?"
+	fi
+	# kontrolli lõpp
 fi
