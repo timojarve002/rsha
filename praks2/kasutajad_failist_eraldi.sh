@@ -19,7 +19,7 @@ else
 	parool=$(cat $fail2)
 
 	useradd $kasutajanimi -m -s /bin/bash
-	echo "$rida:$parool" | chpasswd
+	echo "$rida":"$parool" | chpasswd
 
         done
 
