@@ -9,8 +9,8 @@ teenus=$(dpkg-query -W -f='${Status}' mysql-server 2>/dev/null | grep -c "ok ins
 #teenuse paigaldamine
 if [ $teenus -eq 0 ]; then
 	echo "Paigaldame mysql serveri"
-	debconf-set-selections <<< 'mysql-server mysql-server/qwerty qwerty qwerty'
-	debconf-set-selections <<< 'mysql-server mysql-server/qwerty qwerty qwerty'
+	debconf-set-selections <<< 'mysql-server mysql-server/root_password password qwerty'
+	debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password qwerty'
 	apt-get -y install mysql-server	
 
 elif [ $teenus -eq 1 ]; then
