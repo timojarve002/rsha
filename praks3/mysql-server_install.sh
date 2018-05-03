@@ -1,7 +1,7 @@
 #!/bin/bash
-# apache install skript
+# mysql serveri paigaldamise skript
 
-#kontrollime kas apache2 on paigaldatud
+#kontrollime kas mysql-server on paigaldatud
 teenus=$(dpkg-query -W -f='${Status}' mysql-server 2>/dev/null | grep -c "ok installed")
 #kui on paigaldatud siis tuleb grep loetud tulemusena 1 
 #kui ei ole paigaldatud siis väljastab 0
