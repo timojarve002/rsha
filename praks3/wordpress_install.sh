@@ -1,5 +1,9 @@
 #!/bin/bash
 #Wordpress install skript
+if [ -d "/var/www/html/wordpress" ]; then
+echo "Wordpress kaust on juba olemas"
+exit
+fi
 
 #vajalike pakettide kontrollimine apache2, mysql, phpmyadmin
 teenus=$(dpkg-query -W -f='${Status}' apache2 2>/dev/null | grep -c "ok installed")
