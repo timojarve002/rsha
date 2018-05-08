@@ -1,7 +1,44 @@
 #!/bin/bash
 #Wordpress install skript
 
+#vajalike pakettide kontrollimine apache2, mysql, phpmyadmin
+teenus=$(dpkg-query -W -f='${Status}' apache2 2>/dev/null | grep -c "ok installed")
+teenus2=$(dpkg-query -W -f='${Status}' mysql-server 2>/dev/null | grep -c "ok installed")
+teenus3=$(dpkg-query -W -f='${Status}' phpmyadmin 2>/dev/null | grep -c "ok installed")
+teenus4=$(dpkg-query -W -f='${Status}' unzip 2>/dev/null | grep -c "ok installed")
+#kui on paigaldatud siis tuleb grep loetud tulemusena 1 
+#kui ei ole paigaldatud siis väljastab 0
+
+#teenuse kontroll ja paigaldamine
+if [ $teenus -eq 0 ]; then
+	echo "Paigaldame enne apache"
+	./apache_install.sh
+else
+	echo "Apache2 OK"
+fi
+
+#teenuse kontroll ja paigaldamine
+if [ $teenus2 -eq 0 ]; then
+	echo "Paigaldame enne mysql serveri"
+	./mysql-server_install.sh
+else
+	echo "MySQL Server OK"
+fi
+if [ $teenus3 -eq 0 ]; then
+	echo "Paigaldame enne phpmyadmin"
+	./phpmyadmin_install
+else
+	echo "PHPMyadmin OK"
+fi
+if [ $teenus4 -eq 0 ]; then
+	echo "Paigaldame enne unzip"
+	apt-get install -y unzip
+else
+	echo "unzip OK"
+fi
+echo "------------------------------"
 echo "WordPress Install start"
+echo "------------------------------"
 echo "Sisestage andmebaasi nimi: "
 read -e dbname
 echo "Andmebaasi kasutaja: "
@@ -12,9 +49,6 @@ echo "MySQL admin: "
 read -e dbadmin
 echo "MySQL parool:"
 read -s dbadminpw
-
-	#unzip paigaldus
-	apt-get install -y unzip
 
 echo "Wordpressi installitakse"
 	#wordpressi allalaadimine
@@ -40,6 +74,8 @@ rm -r wordpress/
 rm latest.tar.gz
 #mysql andmebaasi loomine
 mysql -u$dbadmin -p$dbadminpw -e "create database $dbname; GRANT ALL PRIVILEGES ON $dbname.* TO $dbuser@localhost IDENTIFIED BY '$dbpass'; FLUSH PRIVILEGES"
-
-echo "Wordpress on installitud"
 service apache2 restart
+echo "------------------------------"
+echo "Wordpress on installitud"
+echo "------------------------------"
+
