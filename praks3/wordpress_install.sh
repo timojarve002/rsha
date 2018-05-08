@@ -8,8 +8,9 @@ fi
 #vajalike pakettide kontrollimine apache2, mysql, phpmyadmin
 teenus=$(dpkg-query -W -f='${Status}' apache2 2>/dev/null | grep -c "ok installed")
 teenus2=$(dpkg-query -W -f='${Status}' mysql-server 2>/dev/null | grep -c "ok installed")
-teenus3=$(dpkg-query -W -f='${Status}' phpmyadmin 2>/dev/null | grep -c "ok installed")
-teenus4=$(dpkg-query -W -f='${Status}' unzip 2>/dev/null | grep -c "ok installed")
+teenus3=$(dpkg-query -W -f='${Status}' php5 2>/dev/null | grep -c "ok installed")
+teenus4=$(dpkg-query -W -f='${Status}' phpmyadmin 2>/dev/null | grep -c "ok installed")
+teenus5=$(dpkg-query -W -f='${Status}' unzip 2>/dev/null | grep -c "ok installed")
 #kui on paigaldatud siis tuleb grep loetud tulemusena 1 
 #kui ei ole paigaldatud siis väljastab 0
 
@@ -29,12 +30,20 @@ else
 	echo "MySQL Server OK"
 fi
 if [ $teenus3 -eq 0 ]; then
+	echo "Paigaldame enne php5"
+	./php_install
+else
+	echo "php5 OK"
+fi
+
+if [ $teenus4 -eq 0 ]; then
 	echo "Paigaldame enne phpmyadmin"
 	./phpmyadmin_install
 else
 	echo "PHPMyadmin OK"
 fi
-if [ $teenus4 -eq 0 ]; then
+
+if [ $teenus5 -eq 0 ]; then
 	echo "Paigaldame enne unzip"
 	apt-get install -y unzip
 else
