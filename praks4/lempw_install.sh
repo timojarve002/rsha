@@ -53,8 +53,9 @@ if [ $teenus3 -eq 0 ]; then
 	apt-get install -y php5 php5-fpm php5-mysql php5-mcrypt
 #vajalik default conf muuta
 #/etc/nginx/sites-available/default
-
-
+rida2=$(echo "	location ~ \.php$ { include snippets/fastcgi-php.conf;	fastcgi_pass unix:/var/run/php5-fpm.sock; }")
+sed -i "s!server_name.*!&\n$rida2!" /etc/nginx/sites-available/default
+	nginx -t
 	echo "php5 ja moodulid paigaldatud"
 else
 	echo "php5 OK"
