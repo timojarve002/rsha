@@ -7,27 +7,31 @@ apt-get upgrade
 #vajalike pakettide kontrollimine nginx, mysql, phpmyadmin
 teenus=$(dpkg-query -W -f='${Status}' nginx 2>/dev/null | grep -c "ok installed")
 teenus2=$(dpkg-query -W -f='${Status}' mysql-server 2>/dev/null | grep -c "ok installed")
-teenus3=$(dpkg-query -W -f='${Status}' php5 2>/dev/null | grep -c "ok installed")
+teenus3=$(dpkg-query -W -f='${Status}' php5-fpm 2>/dev/null | grep -c "ok installed")
 teenus4=$(dpkg-query -W -f='${Status}' phpmyadmin 2>/dev/null | grep -c "ok installed")
 teenus5=$(dpkg-query -W -f='${Status}' unzip 2>/dev/null | grep -c "ok installed")
 #kui on paigaldatud siis tuleb grep loetud tulemusena 1 
 #kui ei ole paigaldatud siis väljastab 0
 
-
-#teenuse kontroll ja paigaldamine
-
+#nginx teenuse kontroll ja paigaldamine
 if [ $teenus -eq 0 ]; then
 	echo "Paigaldame nginx"
 	apt-get install -y nginx
+	echo "Sisestage oma serveri IP"
+	read -e serverIP
+	rida1=$(echo "server_name ""$serverIP""; ")
+        sed -i "s@server_name localhost;@$rida1@" /etc/nginx/sites-available/default
+
+	#nginx -t
 else
 	echo "nginx OK"
 fi
 
-
-
 #MySQL teenuse kontroll ja paigaldamine
 if [ $teenus2 -eq 0 ]; then
-	echo "Paigaldame enne mysql serveri"
+	echo "------------------------------"
+	echo "MySQL serveri paigaldus"
+	echo "------------------------------"
 	#./mysql-server_install.sh
 
 	echo "MySQL admin: "
@@ -37,36 +41,52 @@ if [ $teenus2 -eq 0 ]; then
 	debconf-set-selections <<< 'mysql-server mysql-server/root_password password $dbadmin'
 	debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $dbadminpw'
 	apt-get -y install mysql-server	
+	echo "MySQL server on paigaldatud!"
 	
 else
 	echo "MySQL Server OK"
 fi
 
-
-
-
-
-
-
+#php5 teenuse kontroll ja paigaldamine
 if [ $teenus3 -eq 0 ]; then
-	echo "Paigaldame enne php5"
-	./php_install
+	echo "Paigaldame php5"
+	apt-get install -y php5 php5-fpm php5-mysql php5-mcrypt
+#vajalik default conf muuta
+#/etc/nginx/sites-available/default
+
+
+	echo "php5 ja moodulid paigaldatud"
 else
 	echo "php5 OK"
 fi
 
-
-
-
-
+#phpmyadmin paigaldus
 if [ $teenus4 -eq 0 ]; then
-	echo "Paigaldame enne phpmyadmin"
-	./phpmyadmin_install
+	echo "Paigaldame phpmyadmin"
+	php5enmod mcrypt
+
+	echo "PHPMyadmin kasutaja parool:"
+	read -s APP_PASS
+	echo "MySQL root parool:"
+	read -s ROOT_PASS
+	echo "PHPMyadmin andmebaasi parool:"
+	read -s APP_DB_PASS
+
+	#parameetrite etteseadistamine phpmyadmin jaoks
+	echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections
+	echo "phpmyadmin phpmyadmin/app-password-confirm password $APP_PASS" | debconf-set-selections
+	echo "phpmyadmin phpmyadmin/mysql/admin-pass password $ROOT_PASS" | debconf-set-selections
+	echo "phpmyadmin phpmyadmin/mysql/app-pass password $APP_DB_PASS" | debconf-set-selections
+	echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect " | debconf-set-selections
+	apt-get install -y phpmyadmin
+
+	#phpmyadmin kausta linkimine nginx 
+	ln -s /usr/share/phpmyadmin /usr/share/nginx/html
+	service php5-fpm restart
+	service nginx restart
 else
 	echo "PHPMyadmin OK"
 fi
-
-
 
 if [ $teenus5 -eq 0 ]; then
 	echo "Paigaldame enne unzip"
@@ -74,6 +94,8 @@ if [ $teenus5 -eq 0 ]; then
 else
 	echo "unzip OK"
 fi
+
+
 echo "------------------------------"
 echo "WordPress Install start"
 echo "------------------------------"
@@ -110,6 +132,7 @@ echo "Ebavajalike failide eemaldamine"
 #failide eemaldamine
 rm -r wordpress/
 rm latest.tar.gz
+
 #mysql andmebaasi loomine
 mysql -u$dbadmin -p$dbadminpw -e "create database $dbname; GRANT ALL PRIVILEGES ON $dbname.* TO $dbuser@localhost IDENTIFIED BY '$dbpass'; FLUSH PRIVILEGES"
 service nginx restart
