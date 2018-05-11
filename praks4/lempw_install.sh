@@ -92,7 +92,12 @@ if [ $teenus4 -eq 0 ]; then
 else
 	echo "PHPMyadmin OK"
 fi
-
+if [ $teenus5 -eq 0 ]; then
+	echo "Paigaldame enne unzip"
+	apt-get install -y unzip
+else
+	echo "unzip OK"
+fi
 #vahepeatus
 read -p "Kas soovite jätkata wordpressi installiga (y/n)? " answer
 case ${answer:0:1} in
