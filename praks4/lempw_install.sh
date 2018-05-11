@@ -1,8 +1,7 @@
 #!/bin/bash
-#LEMP
-
-apt-get update
-apt-get upgrade
+#LEMP+wordpress install skript 
+#apt-get update
+#apt-get upgrade
 
 #vajalike pakettide kontrollimine nginx, mysql, phpmyadmin
 teenus=$(dpkg-query -W -f='${Status}' nginx 2>/dev/null | grep -c "ok installed")
@@ -33,12 +32,11 @@ if [ $teenus2 -eq 0 ]; then
 	echo "MySQL serveri paigaldus"
 	echo "------------------------------"
 	#./mysql-server_install.sh
-
 	
 	echo "MySQL root kasutaja parool:"
-	read -s ROOT_PASS
-	debconf-set-selections <<< 'mysql-server mysql-server/root_password password $ROOT_PASS'
-	debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $ROOT_PASS'
+	read -s dbadminpw
+	debconf-set-selections <<< 'mysql-server mysql-server/root_password password $dbadminpw'
+	debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $dbadminpw'
 	apt-get -y install mysql-server	
 	echo "MySQL server on paigaldatud!"
 	
@@ -72,18 +70,18 @@ if [ $teenus4 -eq 0 ]; then
 	echo "Paigaldame phpmyadmin"
 	php5enmod mcrypt
 
-	echo "PHPMyadmin kasutaja parool:"
-	read -s APP_PASS
-	echo "MySQL root parool:"
-	read -s ROOT_PASS
-	echo "PHPMyadmin andmebaasi parool:"
-	read -s APP_DB_PASS
+	#echo "PHPMyadmin kasutaja parool:"
+	#read -s APP_PASS
+	#echo "MySQL root parool:"
+	#read -s ROOT_PASS
+	#echo "PHPMyadmin andmebaasi parool:"
+	#read -s APP_DB_PASS
 
 	#parameetrite etteseadistamine phpmyadmin jaoks
 	echo "phpmyadmin phpmyadmin/dbconfig-install boolean false" | debconf-set-selections
-	echo "phpmyadmin phpmyadmin/app-password-confirm password $APP_PASS" | debconf-set-selections
-	echo "phpmyadmin phpmyadmin/mysql/admin-pass password $ROOT_PASS" | debconf-set-selections
-	echo "phpmyadmin phpmyadmin/mysql/app-pass password $APP_DB_PASS" | debconf-set-selections
+	#echo "phpmyadmin phpmyadmin/app-password-confirm password $APP_PASS" | debconf-set-selections
+	#echo "phpmyadmin phpmyadmin/mysql/admin-pass password $ROOT_PASS" | debconf-set-selections
+	#echo "phpmyadmin phpmyadmin/mysql/app-pass password $APP_DB_PASS" | debconf-set-selections
 	echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect " | debconf-set-selections
 	apt-get install -y phpmyadmin
 
@@ -95,21 +93,16 @@ else
 	echo "PHPMyadmin OK"
 fi
 
-if [ $teenus5 -eq 0 ]; then
-	echo "Paigaldame enne unzip"
-	apt-get install -y unzip
-else
-	echo "unzip OK"
-fi
-
 #vahepeatus
-echo "Kas soovite jätkata wordpressi installiga (1/0)?"
-read valik
-if [ $valik -eq 0 ]; then
-	exit
-else
-	echo "Jätkame..."
-fi
+read -p "Kas soovite jätkata wordpressi installiga (y/n)? " answer
+case ${answer:0:1} in
+    y|Y )
+        echo "Jätkame..."
+    ;;
+    * )
+        exit
+    ;;
+esac
 
 echo "------------------------------"
 echo "WordPress Install start"
@@ -146,6 +139,8 @@ echo "Wordpressi installitakse"
 
 	mkdir /var/www/html/wordpress
 	rsync -avP wordpress/ /var/www/html/wordpress/
+	ln -s /var/www/html/wordpress /usr/share/nginx/html
+
 echo "Ebavajalike failide eemaldamine"
 #failide eemaldamine
 rm -r wordpress/
