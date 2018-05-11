@@ -7,7 +7,7 @@ apt-get upgrade
 #vajalike pakettide kontrollimine nginx, mysql, phpmyadmin
 teenus=$(dpkg-query -W -f='${Status}' nginx 2>/dev/null | grep -c "ok installed")
 teenus2=$(dpkg-query -W -f='${Status}' mysql-server 2>/dev/null | grep -c "ok installed")
-teenus3=$(dpkg-query -W -f='${Status}' php5-fpm 2>/dev/null | grep -c "ok installed")
+teenus3=$(dpkg-query -W -f='${Status}' php5 2>/dev/null | grep -c "ok installed")
 teenus4=$(dpkg-query -W -f='${Status}' phpmyadmin 2>/dev/null | grep -c "ok installed")
 teenus5=$(dpkg-query -W -f='${Status}' unzip 2>/dev/null | grep -c "ok installed")
 #kui on paigaldatud siis tuleb grep loetud tulemusena 1 
@@ -20,7 +20,7 @@ if [ $teenus -eq 0 ]; then
 	echo "Sisestage oma serveri IP"
 	read -e serverIP
 	rida1=$(echo "server_name ""$serverIP""; ")
-        sed -i "s@server_name localhost;@$rida1@" /etc/nginx/sites-available/default
+        sed -i "s@server_name _;@$rida1@" /etc/nginx/sites-available/default
 
 	#nginx -t
 else
@@ -34,12 +34,11 @@ if [ $teenus2 -eq 0 ]; then
 	echo "------------------------------"
 	#./mysql-server_install.sh
 
-	echo "MySQL admin: "
-	read -e dbadmin
-	echo "MySQL parool:"
-	read -s dbadminpw
-	debconf-set-selections <<< 'mysql-server mysql-server/root_password password $dbadmin'
-	debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $dbadminpw'
+	
+	echo "MySQL root kasutaja parool:"
+	read -s ROOT_PASS
+	debconf-set-selections <<< 'mysql-server mysql-server/root_password password $ROOT_PASS'
+	debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $ROOT_PASS'
 	apt-get -y install mysql-server	
 	echo "MySQL server on paigaldatud!"
 	
@@ -50,11 +49,18 @@ fi
 #php5 teenuse kontroll ja paigaldamine
 if [ $teenus3 -eq 0 ]; then
 	echo "Paigaldame php5"
-	apt-get install -y php5 php5-fpm php5-mysql php5-mcrypt
-#vajalik default conf muuta
-#/etc/nginx/sites-available/default
-rida2=$(echo "	location ~ \.php$ { include snippets/fastcgi-php.conf;	fastcgi_pass unix:/var/run/php5-fpm.sock; }")
-sed -i "s!server_name.*!&\n$rida2!" /etc/nginx/sites-available/default
+	apt-get install -y php5 php5-fpm php5-mysql php5-mcrypt php5-gd libssh2-php
+	#vajalik default conf muuta
+	#/etc/nginx/sites-available/default
+	rida1=$(echo "server_name 172.23.13.44;")
+	rida2=$(echo "	location ~ \.php$ { include snippets/fastcgi-php.conf;	fastcgi_pass unix:/var/run/php5-fpm.sock; }")
+
+	sed -i "s!$rida1!&\n$rida2!" /etc/nginx/sites-available/default
+
+	rida3=$(echo "index index.html index.htm index.nginx-debian.html;")
+	rida4=$(echo "index index.php index.html index.htm index.nginx-debian.html; ")
+	sed -i "s@$rida3@$rida4@" /etc/nginx/sites-available/default
+
 	nginx -t
 	echo "php5 ja moodulid paigaldatud"
 else
@@ -74,7 +80,7 @@ if [ $teenus4 -eq 0 ]; then
 	read -s APP_DB_PASS
 
 	#parameetrite etteseadistamine phpmyadmin jaoks
-	echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections
+	echo "phpmyadmin phpmyadmin/dbconfig-install boolean false" | debconf-set-selections
 	echo "phpmyadmin phpmyadmin/app-password-confirm password $APP_PASS" | debconf-set-selections
 	echo "phpmyadmin phpmyadmin/mysql/admin-pass password $ROOT_PASS" | debconf-set-selections
 	echo "phpmyadmin phpmyadmin/mysql/app-pass password $APP_DB_PASS" | debconf-set-selections
@@ -96,6 +102,14 @@ else
 	echo "unzip OK"
 fi
 
+#vahepeatus
+echo "Kas soovite jätkata wordpressi installiga (1/0)?"
+read valik
+if [ $valik -eq 0 ]; then
+	exit
+else
+	echo "Jätkame..."
+fi
 
 echo "------------------------------"
 echo "WordPress Install start"
@@ -106,10 +120,10 @@ echo "Andmebaasi kasutaja: "
 read -e dbuser
 echo "Andmebaasi parool: "
 read -s dbpass
-#echo "MySQL admin: "
-#read -e dbadmin
-#echo "MySQL parool:"
-#read -s dbadminpw
+echo "MySQL admin: "
+read -e dbadmin
+echo "MySQL parool:"
+read -s dbadminpw
 
 echo "Wordpressi installitakse"
 	#wordpressi allalaadimine
@@ -126,7 +140,10 @@ echo "Wordpressi installitakse"
 	perl -pi -e "s/username_here/$dbuser/g" wp-config.php
 	perl -pi -e "s/password_here/$dbpass/g" wp-config.php
 	#
+	mkdir -p wp-content/uploads
+	chmod 755 wp-content/uploads
 	cd ..
+
 	mkdir /var/www/html/wordpress
 	rsync -avP wordpress/ /var/www/html/wordpress/
 echo "Ebavajalike failide eemaldamine"
