@@ -50,7 +50,7 @@ if [ $teenus3 -eq 0 ]; then
 	apt-get install -y php5 php5-fpm php5-mysql php5-mcrypt php5-gd libssh2-php
 	#vajalik default conf muuta
 	#/etc/nginx/sites-available/default
-	rida1=$(echo "server_name 172.23.13.44;")
+	rida1=$(echo "        #       # With php5-fpm:")
 	rida2=$(echo "	location ~ \.php$ { include snippets/fastcgi-php.conf;	fastcgi_pass unix:/var/run/php5-fpm.sock; }")
 
 	sed -i "s!$rida1!&\n$rida2!" /etc/nginx/sites-available/default
