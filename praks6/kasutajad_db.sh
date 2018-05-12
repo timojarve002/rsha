@@ -46,7 +46,16 @@ chmod 644 /home/$kasutajanimi/.my.cnf
 echo "Faili õigused on parandatud!"
 
 fi
-
+#vahepeatus
+read -p "Kas soovite kasutajale $kasutajanimi luua andmebaasi (y/n)? " answer
+case ${answer:0:1} in
+    y|Y )
+        echo "Jätkame..."
+    ;;
+    * )
+        exit
+    ;;
+esac
 
 	echo "MySQL root parool:"
 	read -s dbadminpw
