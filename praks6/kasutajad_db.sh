@@ -19,13 +19,13 @@ fi
 
 	#kontrollime kas kasutaja kodukataloogis on .my.cnf fail
 	if [ -e /home/$kasutajanimi/.my.cnf ]; then
-	echo "Kasutajal on mysql ligipääs juba olemas!"
-	exit
+	echo "MySQL ligipääs OK"
 	else
 
+echo "Genereerime ja salvestame MySQL parooli"
 #genereerime suvalise parooli
 parool=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w30 | head -n1)
-
+	
 	#salvestame kasutaja nime ja parooli
 	echo "[client]" >> /home/$kasutajanimi/.my.cnf
 	echo "user=$kasutajanimi" >> /home/$kasutajanimi/.my.cnf
@@ -34,17 +34,23 @@ parool=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w30 | head -n1)
 #määrame korrektsed õigused failile
 chown "$kasutajanimi"":""$kasutajanimi" /home/$kasutajanimi/.my.cnf
 chmod 644 /home/$kasutajanimi/.my.cnf
-
+	fi
+	
 	echo "MySQL root parool:"
 	read -s dbadminpw
 	echo "Sisestage soovitud andmebaasi nimi:"
 	read -e dbname
 	dbname2=$(echo "$kasutajanimi""_""$dbname")
 
-	mysql -uroot -p$dbadminpw -e "CREATE DATABASE $dbname2; GRANT ALL PRIVILEGES ON $dbname2.* TO $kasutajanimi@localhost IDENTIFIED BY '$parool'; FLUSH PRIVILEGES;"
-	echo "---------------------------------------------------"
-	echo "$kasutajanimi andmebaas $dbname2 on loodud!"
-	echo "---------------------------------------------------"
+	#Kui skriptis parooli loomist ei toimu tuleb lugeda parool conf failist
+	parool=$(grep -A 100 'password' /home/$kasutajanimi/.my.cnf | cut -f2 -d '=')
+	#Alternatiiv sed -n '/password/,$p' .my.cnf | cut -f2 -d '='
 
-	fi
+mysql -uroot -p$dbadminpw -e "CREATE DATABASE $dbname2; GRANT ALL PRIVILEGES ON $dbname2.* TO $kasutajanimi@localhost IDENTIFIED BY '$parool'; FLUSH PRIVILEGES;"
+echo "---------------------------------------------------"
+echo "$kasutajanimi andmebaas $dbname2 on loodud!"
+echo "---------------------------------------------------"
+
+
 fi
+
