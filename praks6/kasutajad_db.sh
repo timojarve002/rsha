@@ -35,7 +35,19 @@ parool=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w30 | head -n1)
 chown "$kasutajanimi"":""$kasutajanimi" /home/$kasutajanimi/.my.cnf
 chmod 644 /home/$kasutajanimi/.my.cnf
 	fi
-	
+
+rights=$(stat -c %a /home/$kasutajanimi/.my.cnf)
+
+if [ $rights -ne 644 ]; then
+
+#määrame korrektsed õigused failile
+chown "$kasutajanimi"":""$kasutajanimi" /home/$kasutajanimi/.my.cnf
+chmod 644 /home/$kasutajanimi/.my.cnf
+echo "Faili õigused on parandatud!"
+
+fi
+
+
 	echo "MySQL root parool:"
 	read -s dbadminpw
 	echo "Sisestage soovitud andmebaasi nimi:"
